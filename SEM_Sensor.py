@@ -1,6 +1,7 @@
 import cv2
 import matplotlib.pyplot as plt
-import tkinter as tk
+import os
+
 
 def read_yolo_annotations(file_path):
     with open(file_path, 'r') as file:
@@ -40,7 +41,7 @@ def plot_annotations_with_widths(image_path, annotations, HFW):
         width.append(bbox_width_real)  # Add the width to the list
         height.append(bbox_height_real)  # Add the height to the list
 
-        print(f'Object {k+1}: width = {bbox_width_real:.2f} nm, height = {bbox_height_real:.2f} nm')
+        #print(f'Object {k+1}: width = {bbox_width_real:.2f} nm, height = {bbox_height_real:.2f} nm')
 
         # Calculate the coordinates for the bounding box in the upper-left corner format (xmin, ymin)
         xmin = int(center_x_pixels - bbox_width_pixels / 2)
@@ -53,60 +54,45 @@ def plot_annotations_with_widths(image_path, annotations, HFW):
 
     plt.title('Image with bounding boxes and sizes')
     plt.axis('off')  # Turn off axis for a cleaner visualization
-    plt.show()
 
 
+    image_name = os.path.basename(image_path).split('.')[0]
+
+    # Save the plot with the image name
+    plt.savefig(f'{image_name}_annotations.png', bbox_inches='tight',
+                dpi=300)  # Increase dpi to 300 or higher for better resolution
+    plt.show()  # This line is moved to after saving the figure.
 
     return width, height, X_positions, Y_positions
 
-if __name__ == "__main__":
-    image_path = "BS1319_001.tif"  # Replace with the actual image path
-    yolo_annotations_path = "BS1319_001.txt"  # Replace with the actual YOLO annotations file path
-    HFW = 8.29  # micrometer
-
+def analyze_image(image_path, yolo_annotations_path, HFW=8.29):
     annotations = read_yolo_annotations(yolo_annotations_path)
     width, height, X_positions, Y_positions = plot_annotations_with_widths(image_path, annotations, HFW)
 
-    # Plot histogram of widths
-    plt.figure(figsize=(10, 5))
-    plt.hist(width, bins=50, color='blue', edgecolor='black')
-    plt.title('Histogram of Object Widths')
-    plt.xlabel('Width (nm)')
-    plt.ylabel('Count')
-    plt.show()
+    # Define your datasets and corresponding titles and colors
+    datasets = [width, height, X_positions, Y_positions]
+    titles = ['Object Widths', 'Object Heights', 'Object X Positions', 'Object Y Positions']
+    colors = ['blue', 'green', 'purple', 'orange']
 
-    # Plot histogram of heights
-    plt.figure(figsize=(10, 5))
-    plt.hist(height, bins=50, color='green', edgecolor='black')
-    plt.title('Histogram of Object Heights')
-    plt.xlabel('Height (nm)')
-    plt.ylabel('Count')
-    plt.show()
+    # Extract the name of the image without the extension
+    image_name = os.path.basename(image_path).split('.')[0]
 
-    # Plot histogram of X_positions
-    plt.figure(figsize=(10, 5))
-    plt.hist(X_positions, bins=50, color='purple', edgecolor='black')
-    plt.title('Histogram of Object X Positions')
-    plt.xlabel('X Position (nm)')
-    plt.ylabel('Count')
-    plt.show()
+    # Loop through the datasets and create/save the plots
+    for data, title, color in zip(datasets, titles, colors):
+        plt.figure(figsize=(10, 5))
+        plt.hist(data, bins=50, color=color, edgecolor='black')
+        plt.title(f'Histogram of {title}')
+        plt.xlabel(f'{title} (nm)')
+        plt.ylabel('Count')
+        plt.savefig(f'histogram_{image_name}_{title.lower().replace(" ", "_")}.png')
+        plt.show()
 
-    # Plot histogram of Y_positions
-    plt.figure(figsize=(10, 5))
-    plt.hist(Y_positions, bins=50, color='orange', edgecolor='black')
-    plt.title('Histogram of Object Y Positions')
-    plt.xlabel('Y Position (nm)')
-    plt.ylabel('Count')
-    plt.show()
+    output_file_path = "object_information.txt"
+    object_info = f"Number of objects: {len(annotations)}\n"
+    object_info += f"X position range: min = {min(X_positions):.2f} nm, max = {max(X_positions):.2f} nm\n"
+    object_info += f"Y position range: min = {min(Y_positions):.2f} nm, max = {max(Y_positions):.2f} nm\n"
 
-    # Create the tkinter window
-    window = tk.Tk()
-    window.title('Object Information')
+    with open(output_file_path, 'w') as file:
+        file.write(object_info)
 
-    # Add the information to the window
-    tk.Label(window, text=f"Number of objects: {len(annotations)}").pack()
-    tk.Label(window, text=f"X position range: min = {min(X_positions):.2f} nm, max = {max(X_positions):.2f} nm").pack()
-    tk.Label(window, text=f"Y position range: min = {min(Y_positions):.2f} nm, max = {max(Y_positions):.2f} nm").pack()
-
-    # Run the tkinter window
-    window.mainloop()
+    return width, height, X_positions, Y_positions, object_info
