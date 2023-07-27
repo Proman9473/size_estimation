@@ -1,66 +1,64 @@
+# SEM Image Analyzer
 
-# MATLAB Code to Analyze Image and XML Data
+This project provides a set of tools for analyzing Scanning Electron Microscope (SEM) images and their corresponding YOLO (You Only Look Once) object detection annotations.
 
-The provided code reads an image file and a corresponding XML file. The XML file contains bounding box information about objects in the image. The script then calculates the real-world sizes of these bounding boxes and visualizes them on the image.
+## Files
 
-## Code Explanation
+- `SEM_Sensor.py`: Provides functions for reading YOLO annotations, plotting annotated images, and analyzing object properties.
 
-1. **Load Image**
+- `main.py`: Driver program that uses the functions from `SEM_Sensor.py` to analyze all SEM images in a given directory and their corresponding YOLO annotations.
 
-    ```matlab
-    imagefile = 'C:\Users\MahdiKhalili\Desktop\4.tif';
-    img = imread(imagefile);
-    ```
+## SEM_Sensor.py
 
-    The script first loads an image file. The image file path is hardcoded in the script. The `imread` function is used to read the image file.
+This script provides three main functions:
 
-2. **Get Image Dimensions**
+1. `read_yolo_annotations(file_path)`: Reads a YOLO annotation file from the provided path. Each line of the file is split into individual elements and returned as a list of lists.
 
-    ```matlab
-    image_size = size(img);
-    image_width = image_size(2);
-    ```
+2. `plot_annotations_with_widths(image_path, annotations, HFW)`: Takes an image path, a list of YOLO annotations, and the Horizontal Field Width (HFW). Reads the image from the given path, calculates a scale factor for converting pixel coordinates to real-world coordinates in nanometers, and plots the image with bounding boxes around the annotated objects. The real-world width, height, and X and Y positions of each object are also calculated and returned as lists. An annotated image is saved to the current directory.
 
-    The dimensions of the image are obtained using the `size` function. The width of the image is the second element of the returned size vector.
+3. `analyze_image(image_path, yolo_annotations_path, HFW)`: Calls `read_yolo_annotations` and `plot_annotations_with_widths` functions to analyze an image and its YOLO annotations. It also plots histograms for the width, height, and X and Y positions of the objects and saves them to the current directory. Finally, it writes some basic information about the objects (number of objects, minimum and maximum X and Y positions) to a text file and saves it to the current directory.
 
-3. **Read XML file**
+## main.py
 
-    ```matlab
-    xmlfile = 'C:\Users\MahdiKhalili\Desktop\4.xml';
-    xDoc = xmlread(xmlfile);
-    allObjects = xDoc.getElementsByTagName('object');
-    ```
+This script does the following:
 
-    An XML file is read using the `xmlread` function. The script assumes that the XML file contains multiple "object" elements, each of which represents an object in the image.
+1. Imports the required libraries and modules, including the `SEM_Sensor` module.
 
-4. **Image Parameters**
+2. Specifies the directory to start searching for .tif images.
 
-    ```matlab
-    HFW = 4.14; % micrometer
-    scale_factor = (HFW * 1000) / image_width;
-    ```
+3. Recursively traverses the directory, looking for .tif images. For each .tif image found, it checks if a corresponding .txt file (YOLO annotation file) exists.
 
-    The script defines a parameter `HFW` (horizontal field width), which represents the real-world width of the image in micrometers. A scale factor is then calculated, which converts pixel distances to nanometer distances.
+4. For each image and its corresponding annotation file, it creates a subdirectory in the image's directory to store the results.
 
-5. **Calculate real-world bounding box sizes and visualize**
+5. It calls the `analyze_image` function from `SEM_Sensor` module to analyze the image and its annotations, catch and print any errors that occur during the analysis.
 
-    ```matlab
-    figure, imshow(img), title('Image with bounding boxes and widths')
-    hold on
-    ```
+6. It prints the widths, heights, and X and Y positions of the objects detected in the image, as well as the basic information about the objects.
 
-    A new figure is created, and the image is displayed using `imshow`. The `hold on` command is used so that subsequent plotting commands are overlaid on the same figure.
+## Requirements
 
-    ```matlab
-    for k = 0:allObjects.getLength-1
-        thisObject = allObjects.item(k);
-        ...
-    end
-    hold off
-    ```
+To run the scripts, you need Python 3 and the following libraries:
 
-    For each object in the XML file, the script extracts the bounding box information and calculates the real-world size of the bounding box. The bounding box and its real-world size are then visualized on the image.
+- `opencv-python`
+- `matplotlib`
 
----
+These can be installed using pip:
 
-The provided code assumes that the XML file is structured in a specific way, with "object" elements containing "bndbox" elements, which in turn contain "xmin", "ymin", "xmax", and "ymax" elements. If your XML file is structured differently, you would need to modify the script accordingly.
+```
+pip install opencv-python
+pip install matplotlib
+```
+
+Note: Depending on your Python environment, you may need to use `pip3` instead of `pip`, or use pip within a virtual environment.
+
+## Usage
+
+To use the scripts, follow these steps:
+
+1. Ensure that you have Python 3 and the required libraries installed.
+
+2. Put your SEM images (.tif files) and corresponding YOLO annotations (.txt files) in a directory.
+
+3. Run the `main.py` script, specifying the directory containing your images as the `start_dir`.
+
+4. The script will create a subdirectory for each image in the same directory as the image, containing the results of the analysis.
+
