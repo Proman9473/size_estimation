@@ -2,12 +2,12 @@ import os
 import sys
 
 # add the path where your SEM_Sensor.py resides
-sys.path.append(r"C:\Users\MahdiKhalili\Desktop\MLP\Sized")
+sys.path.append(r"SEM_Sensor path")
 
 from SEM_Sensor import analyze_image, read_yolo_annotations, plot_annotations_with_widths
 
 # Start directory
-start_dir = r"C:\Users\MahdiKhalili\Desktop\MLP\Deploy"
+start_dir = r"images main dir"
 
 # Traverse directory recursively
 for root, dirs, files in os.walk(start_dir):
